@@ -1,0 +1,20 @@
+#!/bin/bash
+set -euo pipefail
+
+# Install only files bundled with Terraform so the private VM needs no public package mirror.
+install -d -m 0755 /opt/training-coordinator /var/lib/training-coordinator
+echo '${app_b64}' | base64 -d > /opt/training-coordinator/app.py
+echo '${core_b64}' | base64 -d > /opt/training-coordinator/core.py
+echo '${gcp_b64}' | base64 -d > /opt/training-coordinator/gcp.py
+echo '${service_b64}' | base64 -d > /etc/systemd/system/training-coordinator.service
+chmod 0644 /opt/training-coordinator/*.py /etc/systemd/system/training-coordinator.service
+
+# The CA pool name is not a secret; the VM service account controls signing rights.
+cat > /etc/training-coordinator.env <<'ENV'
+ARTIFACT_BUCKET=${bucket}
+CA_POOL=${ca_pool}
+ENV
+chmod 0644 /etc/training-coordinator.env
+systemctl daemon-reload
+systemctl enable training-coordinator.service
+systemctl restart training-coordinator.service

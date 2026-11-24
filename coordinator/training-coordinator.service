@@ -1,0 +1,20 @@
+[Unit]
+Description=Distributed training dummy coordinator
+After=network.target
+
+[Service]
+# Run the small HTTP server without root privileges.
+User=nobody
+WorkingDirectory=/var/lib/training-coordinator
+EnvironmentFile=/etc/training-coordinator.env
+ExecStart=/usr/bin/python3 /opt/training-coordinator/app.py
+# Recover from a process crash and start again when the VM reboots.
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/training-coordinator
+
+[Install]
+WantedBy=multi-user.target
